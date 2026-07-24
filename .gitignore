@@ -2,6 +2,8 @@
 .scratch/
 .handoff/
 backups/
+CLAUDE.md
+CONTEXT.md
 sources/
 local/
 carlo-skills/

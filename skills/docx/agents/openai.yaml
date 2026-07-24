@@ -1,0 +1,3 @@
+interface:
+  display_name: "DOCX"
+  short_description: "Convert Markdown to DOCX using Pandoc"

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Wayfinder Relay"
+  short_description: "Checkpoint and resume Wayfinder across tasks"
+  default_prompt: "Use $wayfinder-relay to checkpoint or resume the active Wayfinder effort."

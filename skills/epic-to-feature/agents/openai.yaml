@@ -1,0 +1,4 @@
+interface:
+  display_name: "Epic To Feature"
+  short_description: "Break an epic into cohesive features"
+  default_prompt: "Use $epic-to-feature to decompose this epic into bounded features."

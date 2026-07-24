@@ -1,0 +1,15 @@
+.DS_Store
+.scratch/
+.handoff/
+backups/
+sources/
+local/
+carlo-skills/
+15 Claude Skills I Can_t Live Without/
+product-coach/
+.hub-state/
+skills/wayfinder-relay alias
+.env
+.env.*
+*.pem
+id_rsa

@@ -1,0 +1,7 @@
+interface:
+  display_name: "Agentic Delivery Loop"
+  short_description: "Spec-first multi-agent delivery workflow"
+  default_prompt: "Use $agentic-delivery-loop to turn this feature idea into a Codex goal, PRD/OpenSpec, parallel implementation and test plan, integrated validation, simplify-code pass, UX polish, and ship checklist."
+
+policy:
+  allow_implicit_invocation: true

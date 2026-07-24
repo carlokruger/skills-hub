@@ -1,0 +1,4 @@
+interface:
+  display_name: "Claims Delta Requirements"
+  short_description: "Draft claims requirements from deltas"
+  default_prompt: "Use $claims-delta-requirements to draft this claims requirement from the closest signed-off reference and the delta."

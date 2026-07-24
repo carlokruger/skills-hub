@@ -1,0 +1,4 @@
+interface:
+  display_name: "Feature To Story"
+  short_description: "Refine a feature into delivery stories"
+  default_prompt: "Use $feature-to-story to refine this feature into delivery-ready stories."

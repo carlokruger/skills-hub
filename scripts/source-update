@@ -1,0 +1,52 @@
+#!/bin/zsh
+set -eu
+
+script_dir=${0:A:h}
+hub_root=${script_dir:h}
+manifest=${hub_root}/sources.json
+usage() { print "Usage: ./scripts/source-update <propose|apply> <source-id> [--revision <full-sha>]"; }
+[[ $# -ge 2 ]] || { usage; exit 2; }
+action=$1 source_id=$2; shift 2
+revision=""
+while (( $# )); do
+  [[ $1 == --revision && $# -ge 2 ]] || { usage; exit 2; }
+  revision=$2; shift 2
+done
+[[ -f $manifest ]] || { print -u2 "missing sources.json"; exit 2; }
+plutil -convert xml1 -o /dev/null "$manifest" >/dev/null
+url=$(plutil -extract "sources.${source_id}.url" raw -o - "$manifest" 2>/dev/null) || { print -u2 "unknown source: $source_id"; exit 2; }
+current=$(plutil -extract "sources.${source_id}.revision" raw -o - "$manifest")
+license_path=$(plutil -extract "sources.${source_id}.license_path" raw -o - "$manifest")
+checkout=${hub_root}/sources/${source_id}
+[[ -d $checkout/.git ]] || { print -u2 "source checkout is missing; run bootstrap first"; exit 2; }
+if [[ $action == propose ]]; then
+  [[ -z $revision ]] && revision=$(git ls-remote "$url" HEAD | awk '{print $1}')
+elif [[ $action == apply ]]; then
+  [[ $revision =~ '^[0-9a-f]{40}$' ]] || { print -u2 "apply requires --revision <full-sha>"; exit 2; }
+else
+  usage; exit 2
+fi
+[[ $revision =~ '^[0-9a-f]{40}$' ]] || { print -u2 "candidate revision must be a full lowercase SHA"; exit 2; }
+git -C "$checkout" fetch --quiet origin "$revision"
+git -C "$checkout" cat-file -e "${revision}:${license_path}" || { print -u2 "license evidence is absent at candidate revision"; exit 1; }
+skills_json=$(plutil -extract "sources.${source_id}.skills" json -o - "$manifest")
+while IFS= read -r mapped_path; do
+  [[ $mapped_path != /* && $mapped_path != *".."* ]] || { print -u2 "invalid exposed path: $mapped_path"; exit 1; }
+  git -C "$checkout" cat-file -e "${revision}:${mapped_path}/SKILL.md" || { print -u2 "missing SKILL.md at candidate: $mapped_path"; exit 1; }
+done < <(plutil -extract "sources.${source_id}.skills" json -o - "$manifest" | sed -n 's/.*: "\([^"]*\)".*/\1/p')
+print "VALID source=$source_id current=$current candidate=$revision license_path=$license_path"
+print -r -- "--- sources.json"
+print -r -- "+++ sources.json"
+print -r -- "@@ source $source_id @@"
+print -r -- "-      \"revision\": \"$current\""
+print -r -- "+      \"revision\": \"$revision\""
+[[ $action == propose ]] && exit 0
+tmp_manifest=$(mktemp "${TMPDIR:-/tmp}/skills-hub-manifest.XXXXXX")
+cp "$manifest" "$tmp_manifest"
+updated_manifest=$(mktemp "${TMPDIR:-/tmp}/skills-hub-updated.XXXXXX")
+rendered_manifest=$(mktemp "${TMPDIR:-/tmp}/skills-hub-rendered.XXXXXX")
+plutil -replace "sources.${source_id}.revision" -string "$revision" -o "$updated_manifest" "$tmp_manifest"
+plutil -convert json -o "$rendered_manifest" "$updated_manifest"
+mv "$rendered_manifest" "$manifest"
+rm -f "$tmp_manifest" "$updated_manifest"
+print "APPLIED source=$source_id revision=$revision"

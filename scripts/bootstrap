@@ -53,7 +53,7 @@ resolve_destination() {
   esac
 }
 
-typeset -a destinations skills source_ids
+typeset -a destinations skills source_ids required_source_ids
 # Profile identifiers are intentionally constrained to simple, whitespace-free names.
 # Keep array decoding dependency-free while retaining plutil as the JSON parser.
 array_values() {
@@ -71,7 +71,25 @@ for destination_name in $destinations; do
 done
 
 source_ids=("${(@f)$(plutil -extract sources xml1 -o - "$manifest" | sed -n $'s/^\\t<key>\\([^<]*\\)<\\/key>$/\\1/p')}")
-(( ${#source_ids} > 0 )) || die_preflight "manifest has no sources"
+
+source_for_skill() {
+  local skill_id=$1 source_id mapped_path
+  for source_id in $source_ids; do
+    mapped_path=$(plutil -extract "sources.${source_id}.skills.${skill_id}" raw -o - "$manifest" 2>/dev/null || true)
+    [[ -n $mapped_path ]] || continue
+    print "$source_id"
+    return 0
+  done
+  return 1
+}
+
+typeset -A required_sources
+for skill_id in $skills; do
+  [[ -f ${hub_root}/skills/${skill_id}/SKILL.md ]] && continue
+  source_id=$(source_for_skill "$skill_id") || continue
+  required_sources[$source_id]=1
+done
+required_source_ids=("${(@k)required_sources}")
 
 valid_skill_path() {
   local skill_id=$1 source_id mapped_path
@@ -79,18 +97,15 @@ valid_skill_path() {
     print "${hub_root}/skills/${skill_id}"
     return 0
   fi
-  for source_id in $source_ids; do
-    mapped_path=$(sed -n "s/.*\"${skill_id}\"[[:space:]]*:[[:space:]]*\"\\([^\"]*\\)\".*/\\1/p" "$manifest")
-    [[ -n $mapped_path ]] || continue
-    [[ $mapped_path != /* && $mapped_path != *".."* && -f ${hub_root}/sources/${source_id}/${mapped_path}/SKILL.md ]] || continue
-    print "${hub_root}/sources/${source_id}/${mapped_path}"
-    return 0
-  done
-  return 1
+  source_id=$(source_for_skill "$skill_id") || return 1
+  mapped_path=$(plutil -extract "sources.${source_id}.skills.${skill_id}" raw -o - "$manifest" 2>/dev/null || true)
+  [[ $mapped_path != /* && $mapped_path != *".."* && -f ${hub_root}/sources/${source_id}/${mapped_path}/SKILL.md ]] || return 1
+  print "${hub_root}/sources/${source_id}/${mapped_path}"
+  return 0
 }
 
 mkdir -p "${hub_root}/sources" "${hub_root}/.hub-state" || die_preflight "cannot create Hub state directories"
-for source_id in $source_ids; do
+for source_id in $required_source_ids; do
   url=$(plutil -extract "sources.${source_id}.url" raw -o - "$manifest") || { (( skipped++ )); continue; }
   revision=$(plutil -extract "sources.${source_id}.revision" raw -o - "$manifest") || { (( skipped++ )); continue; }
   license_path=$(plutil -extract "sources.${source_id}.license_path" raw -o - "$manifest") || { (( skipped++ )); continue; }
@@ -110,48 +125,100 @@ for source_id in $source_ids; do
   (( restored++ ))
 done
 
-for destination_name in $destinations; do
-  destination=$(resolve_destination "$destination_name")
-  state=${hub_root}/.hub-state/${profile_name}-${destination_name}.tsv
-  mkdir -p "$destination"
-  touch "$state"
-  previous_state=$(mktemp "${TMPDIR:-/tmp}/skills-hub-state.XXXXXX")
-  cp "$state" "$previous_state"
-  typeset -A selected
-  for skill_id in $skills; do selected[$skill_id]=1; done
-  while IFS=$'\t' read -r stale_id stale_target; do
-    [[ -n ${selected[$stale_id]:-} ]] && continue
-    stale_link=${destination}/${stale_id}
-    if [[ -L $stale_link && $(readlink "$stale_link") == "$stale_target" ]]; then
-      rm "$stale_link"; (( reconciled++ ))
-    fi
-  done < "$previous_state"
-  : > "$state"
-  for skill_id in $skills; do
-    target=$(valid_skill_path "$skill_id") || { print -u2 "SKIP $profile_name/$destination_name/$skill_id: missing or invalid selection"; (( skipped++ )); continue; }
-    link=${destination}/${skill_id}
-    if [[ -L $link && $(readlink "$link") == "$target" ]]; then
-      (( retained++ ))
-    elif [[ ! -e $link ]]; then
-      ln -s "$target" "$link" || { (( skipped++ )); continue; }
-      (( created++ ))
-    elif (( replace )) && [[ -L $link ]]; then
-      recorded_target=$(awk -F $'\t' -v id="$skill_id" '$1 == id { print $2; exit }' "$previous_state")
-      if [[ -n $recorded_target && $(readlink "$link") == "$recorded_target" ]]; then
-        rm "$link" && ln -s "$target" "$link" && (( created++ ))
-      else
-        print -u2 "CONFLICT $profile_name/$destination_name/$skill_id: existing target left untouched"
-        (( conflicts++ ))
-        continue
-      fi
+canonical_destination=$(resolve_destination agents)
+state=${hub_root}/.hub-state/${profile_name}-agents.tsv
+if [[ -L $canonical_destination || ( -e $canonical_destination && ! -d $canonical_destination ) ]]; then
+  print -u2 "CONFLICT $profile_name/agents: existing target left untouched"
+  print "INCOMPLETE profile=$profile_name sources=$restored created=$created retained=$retained reconciled=$reconciled conflicts=1 skipped=$skipped"
+  print -u2 "Remediate the reported items, then rerun ./scripts/bootstrap --profile $profile_name"
+  exit 1
+fi
+mkdir -p "$canonical_destination"
+touch "$state"
+previous_state=$(mktemp "${TMPDIR:-/tmp}/skills-hub-state.XXXXXX")
+cp "$state" "$previous_state"
+typeset -A selected
+for skill_id in $skills; do selected[$skill_id]=1; done
+while IFS=$'\t' read -r stale_id stale_target; do
+  [[ -n ${selected[$stale_id]:-} ]] && continue
+  stale_link=${canonical_destination}/${stale_id}
+  if [[ -L $stale_link && $(readlink "$stale_link") == "$stale_target" ]]; then
+    rm "$stale_link"; (( reconciled++ ))
+  fi
+done < "$previous_state"
+: > "$state"
+for skill_id in $skills; do
+  target=$(valid_skill_path "$skill_id") || { print -u2 "SKIP $profile_name/agents/$skill_id: missing or invalid selection"; (( skipped++ )); continue; }
+  link=${canonical_destination}/${skill_id}
+  if [[ -L $link && $(readlink "$link") == "$target" ]]; then
+    (( retained++ ))
+  elif [[ ! -e $link ]]; then
+    ln -s "$target" "$link" || { (( skipped++ )); continue; }
+    (( created++ ))
+  elif (( replace )) && [[ -L $link ]]; then
+    recorded_target=$(awk -F $'\t' -v id="$skill_id" '$1 == id { print $2; exit }' "$previous_state")
+    if [[ -n $recorded_target && $(readlink "$link") == "$recorded_target" ]]; then
+      rm "$link" && ln -s "$target" "$link" && (( created++ ))
     else
-      print -u2 "CONFLICT $profile_name/$destination_name/$skill_id: existing target left untouched"
+      print -u2 "CONFLICT $profile_name/agents/$skill_id: existing target left untouched"
       (( conflicts++ ))
       continue
     fi
-    print -r -- "${skill_id}"$'\t'"${target}" >> "$state"
-  done
-  rm -f "$previous_state"
+  else
+    print -u2 "CONFLICT $profile_name/agents/$skill_id: existing target left untouched"
+    (( conflicts++ ))
+    continue
+  fi
+  print -r -- "${skill_id}"$'\t'"${target}" >> "$state"
+done
+rm -f "$previous_state"
+
+legacy_projection_is_managed() {
+  local destination=$1 legacy_state=$2 legacy_id legacy_target entry
+  typeset -i recorded=0 actual=0
+  typeset -A expected
+
+  [[ -d $destination && ! -L $destination && -f $legacy_state ]] || return 1
+  while IFS=$'\t' read -r legacy_id legacy_target; do
+    [[ -n $legacy_id && -n $legacy_target && -L ${destination}/${legacy_id} && $(readlink "${destination}/${legacy_id}") == "$legacy_target" ]] || return 1
+    expected[$legacy_id]=1
+    (( recorded++ ))
+  done < "$legacy_state"
+  (( recorded > 0 )) || return 1
+  while IFS= read -r entry; do
+    [[ -n ${expected[${entry:t}]:-} ]] || return 1
+    (( actual++ ))
+  done < <(find "$destination" -mindepth 1 -maxdepth 1 -print)
+  (( actual == recorded ))
+}
+
+migrate_legacy_projection() {
+  local destination=$1 legacy_state=$2 legacy_id legacy_target
+  while IFS=$'\t' read -r legacy_id legacy_target; do
+    rm "${destination}/${legacy_id}"
+  done < "$legacy_state"
+  rmdir "$destination"
+  ln -s "$canonical_destination" "$destination"
+}
+
+for destination_name in $destinations; do
+  [[ $destination_name == agents ]] && continue
+  destination=$(resolve_destination "$destination_name")
+  legacy_state=${hub_root}/.hub-state/${profile_name}-${destination_name}.tsv
+  mkdir -p "${destination:h}"
+  if [[ -L $destination && $(readlink "$destination") == "$canonical_destination" ]]; then
+    (( retained++ ))
+  elif legacy_projection_is_managed "$destination" "$legacy_state"; then
+    migrate_legacy_projection "$destination" "$legacy_state" || { (( skipped++ )); continue; }
+    (( created++ ))
+    (( reconciled++ ))
+  elif [[ ! -e $destination && ! -L $destination ]]; then
+    ln -s "$canonical_destination" "$destination" || { (( skipped++ )); continue; }
+    (( created++ ))
+  else
+    print -u2 "CONFLICT $profile_name/$destination_name: existing target left untouched"
+    (( conflicts++ ))
+  fi
 done
 
 if (( skipped || conflicts )); then

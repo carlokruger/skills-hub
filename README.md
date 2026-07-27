@@ -12,11 +12,11 @@ Download the repository ZIP or clone it, then from its root run a named profile:
 ./scripts/bootstrap --profile carlo-baseline
 ```
 
-The v1 support boundary is macOS running zsh. Bootstrap requires `git` and macOS `plutil`; it restores every manifest Source at its exact pinned revision, then creates selected skill symlinks under the current user's agent roots. It never installs prerequisites silently.
+The v1 support boundary is macOS running zsh. Bootstrap requires `git` and macOS `plutil`; it restores only Sources needed by the selected profile at their exact pinned revisions, then creates selected skill symlinks under `AGENTS_HOME` (default `~/.agents`) and projects that directory to the selected Claude and Codex roots. It never installs prerequisites silently.
 
 Use `--no-input` for automation-safe setup. `--replace` is intentionally narrow: it can replace only a link previously recorded as Hub-managed. Existing files, directories, and foreign symlinks are conflicts left untouched. A run can finish `INCOMPLETE` after applying independent valid work; its nonzero status and per-item messages identify what to fix.
 
-`carlo-baseline` installs the 42 authored skills in `skills/` into the `AGENTS_HOME` (default `~/.agents`), `CLAUDE_HOME` (default `~/.claude`), and `CODEX_HOME` (default `~/.codex`) skill roots. It deliberately does not expose third-party Source skills. Add a reviewed manifest mapping and profile selection before doing so.
+`carlo-baseline` installs the 42 authored skills in `skills/` under `AGENTS_HOME` (default `~/.agents`). Its `CLAUDE_HOME` (default `~/.claude`) and `CODEX_HOME` (default `~/.codex`) skill roots are directory links to that canonical projection. It deliberately does not expose third-party Source skills. Add a reviewed manifest mapping and profile selection before doing so.
 
 ## Source updates
 

@@ -35,8 +35,9 @@ Do not attempt to execute `/new`. It is client-level session control, not an age
    - Finish missing tracker bookkeeping when the decision is already established. Do not invent or answer an unresolved human decision.
    - If the user stops before resolution, leave the ticket open and make that same ticket the restart point.
 3. Refresh the frontier without claiming anything. If the current ticket remains open, use it as the restart point; otherwise identify the first open, unblocked, unclaimed child in tracker order.
-4. Follow `../handoff/SKILL.md` and write a timestamped handoff under the repository root's `.handoff/` folder.
-5. Keep the handoff pointer-heavy. Include:
+4. Follow `../handoff/SKILL.md` and write a timestamped handoff directly under the repository root's `.handoff/` folder.
+5. If this checkpoint supersedes a Wayfinder handoff used by the current relay, verify that the replacement exists, then move only that superseded handoff to `.handoff/archive/`, preserving its filename. Create `.handoff/archive/` when needed. Do not archive unrelated handoffs, and do not archive anything before the replacement handoff is written successfully.
+6. Keep the handoff pointer-heavy. Include:
    - the repository root and active map;
    - the ticket resolved or paused in this task;
    - the exact restart ticket by linked name, including whether it is currently unclaimed;
@@ -44,7 +45,7 @@ Do not attempt to execute `/new`. It is client-level session control, not an age
    - the skills named by the map, plus `wayfinder-relay` and `wayfinder`;
    - the one-ticket-per-task invariant;
    - the exact continuation prompt: `Use $wayfinder-relay to resume from <handoff-path>.`
-6. End with a compact transition block:
+7. End with a compact transition block:
 
 ```text
 /new
@@ -57,7 +58,7 @@ Do not begin the restart ticket in checkpoint mode.
 
 1. Locate the checkpoint:
    - Use an explicit handoff path when provided.
-   - Otherwise choose the newest relevant Wayfinder handoff under the repository root's `.handoff/` folder.
+   - Otherwise choose the newest relevant Wayfinder handoff directly under the repository root's `.handoff/` folder. Do not treat `.handoff/archive/` as an active checkpoint source.
    - If no handoff exists, locate the active Wayfinder map directly and continue from its live frontier.
 2. Load the handoff, then load the map and this repository's tracker instructions. Do not load every ticket body.
 3. Refresh current ticket and dependency state:

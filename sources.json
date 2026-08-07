@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
   "sources": {
-    "awesome-agent-skills": { "url": "https://github.com/VoltAgent/awesome-agent-skills.git", "revision": "2fcbf138f63697e999d26c6266eea597e6564a23", "license": "MIT", "license_path": "LICENSE", "skills": {} },
-    "compound-engineering-plugin": { "url": "https://github.com/EveryInc/compound-engineering-plugin.git", "revision": "3422ea0916bbbed02b0e6ccbdde6651203a67f2b", "license": "MIT", "license_path": "LICENSE", "skills": {} },
-    "impeccable": { "url": "https://github.com/pbakaus/impeccable.git", "revision": "3e38e595c7082d5519ba7326d8f232dc3343f10b", "license": "Apache-2.0", "license_path": "LICENSE", "skills": {} },
-    "marketingskills": { "url": "https://github.com/coreyhaines31/marketingskills.git", "revision": "67264763cb107d61749f418d081c56e5bcbc0209", "license": "MIT", "license_path": "LICENSE", "skills": {} },
-    "matt-pocock": { "url": "https://github.com/mattpocock/skills.git", "revision": "d36d6f0a5730177b1fcfdcc68fb8a37dece7c283", "license": "MIT", "license_path": "LICENSE", "skills": {} },
-    "open-design": { "url": "https://github.com/nexu-io/open-design.git", "revision": "c2e3691130e495f08cffa29eafb551aa107de749", "license": "Apache-2.0", "license_path": "LICENSE", "skills": {} },
-    "pm-skills": { "url": "https://github.com/phuryn/pm-skills.git", "revision": "36ccefdc6c2e00d7c0c12cb0a52bf93e8ec50da4", "license": "MIT", "license_path": "LICENSE", "skills": {} },
+    "awesome-agent-skills": { "url": "https://github.com/VoltAgent/awesome-agent-skills.git", "revision": "5241ad954d2880330d9f3a7df086f8d943c4c988", "license": "MIT", "license_path": "LICENSE", "skills": {} },
+    "compound-engineering-plugin": { "url": "https://github.com/EveryInc/compound-engineering-plugin.git", "revision": "0a2957852e2034d04eb01120fd7da6ed5307dc56", "license": "MIT", "license_path": "LICENSE", "skills": {} },
+    "impeccable": { "url": "https://github.com/pbakaus/impeccable.git", "revision": "aee6ce9352b842217b3f57c78296a7a4fa35a7f3", "license": "Apache-2.0", "license_path": "LICENSE", "skills": {} },
+    "marketingskills": { "url": "https://github.com/coreyhaines31/marketingskills.git", "revision": "7868cb9251fad80a73d26e488a5ad5f6c4a9f335", "license": "MIT", "license_path": "LICENSE", "skills": {} },
+    "matt-pocock": { "url": "https://github.com/mattpocock/skills.git", "revision": "84fdeffd12f2ee307994d1eb6feb48173b6e0502", "license": "MIT", "license_path": "LICENSE", "skills": { "wizard": "skills/engineering/wizard" } },
+    "open-design": { "url": "https://github.com/nexu-io/open-design.git", "revision": "72512593347aed64c77481411debabd4e533b2e9", "license": "Apache-2.0", "license_path": "LICENSE", "skills": {} },
+    "pm-skills": { "url": "https://github.com/phuryn/pm-skills.git", "revision": "18468a95b427e70e258b51389796367c6f684e7d", "license": "MIT", "license_path": "LICENSE", "skills": {} },
     "product-manager-skills": { "url": "https://github.com/carlokruger/Product-Manager-Skills.git", "revision": "328bc80c7465bb00e220331cc265986c818aa8e3", "license": "CC-BY-NC-SA-4.0", "license_path": "LICENSE", "skills": {} },
-    "sandcastle": { "url": "https://github.com/mattpocock/sandcastle.git", "revision": "20cb6086b567f3fd83f2b2cb9c7ad565a852c67f", "license": "MIT", "license_path": "LICENSE", "skills": {} }
+    "sandcastle": { "url": "https://github.com/mattpocock/sandcastle.git", "revision": "e99f832f26dc9d245c019a9ddd19fa5dee792427", "license": "MIT", "license_path": "LICENSE", "skills": {} }
   }
 }

@@ -1,0 +1,113 @@
+Core Instruction
+When generating important, creative, strategic, architectural, product, writing, or problem-solving outputs, do not immediately settle on the first plausible answer.
+
+Instead, use Verbalised Sampling:
+
+Generate multiple candidate responses or approaches.
+Estimate how typical or high-probability each response is.
+Identify candidates that are useful but less central to the obvious response distribution.
+Prefer responses that combine correctness, usefulness, and constructive divergence from the generic mean.
+Avoid selecting novelty if it reduces accuracy, coherence, maintainability, or user value.
+When To Use Verbalised Sampling
+Use this approach for:
+
+Product strategy
+Technical architecture
+UX design
+Writing and editorial framing
+Risk identification
+Requirements analysis
+Creative ideation
+Naming
+Refactoring strategies
+Planning
+Problem diagnosis
+Generating alternatives where the obvious answer may be bland or incomplete
+Do not overuse it for:
+
+Simple factual answers
+Mechanical code edits
+Security-sensitive implementation details
+Legal, medical, financial, or safety-critical answers where correctness dominates creativity
+Cases where the user explicitly asks for the shortest or most conventional answer
+Candidate Generation Protocol
+For non-trivial tasks, silently generate several candidate approaches before answering.
+
+Suggested internal candidate set:
+
+Candidate A — Conventional: The obvious high-probability answer.
+Candidate B — Pragmatic: A practical, implementation-friendly answer.
+Candidate C — Divergent: A less common but still useful approach.
+Candidate D — Inversion: An answer that challenges the premise or reverses the framing.
+Candidate E — Synthesis: A combined answer using the strongest parts of the others.
+Do not expose this full internal candidate set unless the user asks for options, trade-offs, or reasoning.
+
+Scoring Rubric
+Score candidate responses internally against the following dimensions:
+
+Dimension	Question	Score
+Correctness	Is it factually and technically sound?	1-5
+Usefulness	Does it help the user make progress?	1-5
+Specificity	Is it concrete rather than generic?	1-5
+Typicality	How close is it to the obvious/common answer?	1-5
+Constructive Divergence	Does it add valuable non-obvious perspective?	1-5
+Risk	Could this mislead, overcomplicate, or create harm?	1-5
+Selection rule:
+
+Prefer high correctness, usefulness, and specificity.
+Prefer moderate-to-high constructive divergence.
+Penalize high risk.
+Do not automatically select the lowest-typicality answer.
+The best answer is usually not the strangest answer; it is the most useful answer that avoids unnecessary genericity.
+Response Selection Rule
+Choose the final response using this priority order:
+
+Correctness
+User value
+Context fit
+Specificity
+Constructive divergence
+Elegance and clarity
+Novelty
+Novelty is valuable only when it improves the answer.
+
+Practical Prompt Pattern
+When useful, apply this pattern internally:
+
+Generate several possible responses to the user’s request.
+
+For each response, estimate:
+- correctness
+- usefulness
+- probability / typicality
+- novelty
+- risk
+- why it might be better or worse than the obvious answer
+
+Select the response that is correct and useful while avoiding unnecessary regression to the generic mean.
+
+Do not choose novelty for its own sake.
+Tail Exploration Pattern
+For creative or strategic work, intentionally explore the tails of the response distribution:
+
+Generate at least three viable responses:
+1. A conventional answer.
+2. A strong pragmatic answer.
+3. A lower-probability but still useful answer.
+
+Compare them and produce a final answer that uses the best elements while avoiding blandness, cliché, or unnecessary eccentricity.
+Guardrails
+Verbalised Sampling must not be used as an excuse to hallucinate.
+
+Do not:
+
+Invent facts.
+Overstate confidence.
+Prefer surprising claims without evidence.
+Use obscure framing when a simple one is better.
+Make code more complex merely to appear clever.
+Ignore user constraints in pursuit of originality.
+Present speculative answers as established fact.
+For factual or current topics, verify where appropriate before applying divergent framing.
+
+For code, divergence should improve maintainability, readability, extensibility, reliability, or testability. Cleverness without payoff is a tax.
